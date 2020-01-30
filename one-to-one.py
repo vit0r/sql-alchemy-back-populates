@@ -13,8 +13,26 @@ db_session = scoped_session(sessionmaker(autocommit=False, autoflush=True, bind=
 Base = declarative_base()
 Base.query = db_session.query_property()
 
+
 def init_db():
-    Base.metadata.create_all(bind=engine)
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as ex:
+        print(ex)
+
+    try:
+        for r in range(1, 101):
+            p = Parent(name=f"Parents{r}")
+            c = Child(name=f"Child{r}", parent_id=r)
+            db_session.add(p)
+            db_session.add(c)
+        db_session.commit()
+    except Exception as ex:
+        print(ex)
+        db_session.rollback()
+    finally:
+        print("databse filled")
+
 
 class Parent(Base):
     __tablename__ = "parent"
@@ -23,7 +41,8 @@ class Parent(Base):
     child = relationship("Child", uselist=False, back_populates="parent")
 
     def __repr__(self):
-        return f"{self.__tablename__}_id_{self.id}_parent_id_{self.parent_id}"
+        return f"\n{self.__tablename__}_id_{self.id}_parent_id_{self.parent_id}\n"
+
 
 class Child(Base):
     __tablename__ = "child"
@@ -33,21 +52,18 @@ class Child(Base):
     parent = relationship("Parent", back_populates="child")
 
     def __repr__(self):
-        return f"{self.__tablename__}_id_{self.id}_parent_id_{self.parent_id}"
+        return f"\n{self.__tablename__}_id_{self.id}_parent_id_{self.parent_id}\n"
+
+
+def one_to_one():
+    dataset = db_session.query(Child).filter(Child.parent_id == Parent.id)
+    first_data = dataset.first()
+    print("first register: ", first_data)
+    all_data = dataset.all()
+    print("all registers: ", all_data)
+
 
 if Path("database.db").exists():
-    r = db_session.query(Child).filter(Child.parent_id == Parent.id).all()
-    print(r)
+    one_to_one()
 else:
     init_db()
-    try:
-        for r in range(1,101):
-            p = Parent(name=f"Parents{r}")
-            c = Child(name=f"Child{r}", parent_id=r)
-            db_session.add(p)
-            db_session.add(c)
-        db_session.commit()
-    except:
-        db_session.rollback()
-    finally:
-        print('databse filled')
