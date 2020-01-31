@@ -1,13 +1,16 @@
 # Usage
 
+## Result from sqllite databse
+
 ```shell
-python -i main.py
+sqlitebrowser database.db
+python -i one-to-one.py
 ```
 
-## result on databse exists 4 parents and only parents 4 and 1 have child
+## Result from postgresql databse
 
 ```shell
-$ sqlitebrowser database.db # insert 4 childs and 4 parents, when child 1 have parent 1  
-$ python -i main.py
-[child_id_1_parent_id_1]
+docker run --name local-postgres -e POSTGRES_PASSWORD=mysecretpassword -p 5432:5432 postgres
+python -i one-to-one-pgsql.py
+docker exec -it local-postgres psql -U postgres
 ```
